@@ -1,0 +1,8 @@
+int main()
+{
+  # zalozmy ze jakies te odcinki istnieja
+  Polyhedron p = Polyhedron(ab, ac, ad, bc, bd, cd);
+  Collection scene = Collection();
+  scene.display();
+  print("some string");
+}
