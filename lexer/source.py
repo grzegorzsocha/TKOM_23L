@@ -2,7 +2,7 @@ import io
 
 
 class Source:
-    EOL = ['\n', '\r', '\r\n', '\n\r']
+    EOL = ['\n', '\r']
 
     def __init__(self, stream) -> None:
         self.stream = stream
@@ -42,6 +42,13 @@ class Source:
         readed_line = self.stream.readline()
         self.stream.seek(current_position)
         return readed_line
+
+    def seek_next(self) -> str:
+        current_position = self.stream.tell()
+        self.get_next_char()
+        next_char = self.get_current_char()
+        self.stream.seek(current_position)
+        return next_char
 
 
 class FileSource(Source):

@@ -132,8 +132,6 @@ while(a != b)
 }
 ```
 
-Zarówno jak w pętli jak i w instrukcji warunkowej dostępne będzie słowo kluczowe `break` które będzie przerywało instukcję/pętlę.
-
 
 ## Definiowanie funkcji
 Każdy wczytany program musi zawierać funkcję `int main()`, która będzie wykonywana jako pierwsza.

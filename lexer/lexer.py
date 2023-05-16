@@ -47,8 +47,24 @@ class Lexer:
             position = self.get_position()
             self.get_next_char()
             while self.get_current_char() != '"':
-                value += self.get_current_char()
+                if self.get_current_char() == '\\':
+                    self.get_next_char()
+                    if self.get_current_char() == 'n':
+                        char_to_add = '\n'
+                    elif self.get_current_char() == 't':
+                        char_to_add = '\t'
+                    elif self.get_current_char() == '\\':
+                        char_to_add = '\\'
+                    elif self.get_current_char() == '"':
+                        char_to_add = '\"'
+                    elif self.get_current_char() == "'":
+                        char_to_add = "\'"
+                else:
+                    char_to_add = self.get_current_char()
+                value += char_to_add
                 self.get_next_char()
+                if self.get_current_char() == '':
+                    raise ValueError('String not closed')
                 if len(value) > self.MAX_STRING_LENGTH:
                     raise ExceedsMaxLengthError(self.get_position()[0], self.get_position()[1], 'String')
             self.get_next_char()
@@ -96,7 +112,8 @@ class Lexer:
                     value += self.get_current_char()
                     self.get_next_char()
                     return Token(type=Symbol.double_chars[value], value=value, pos=position)
-            self.get_next_char()
+            if value not in ['=', '!', '<', '>']:
+                self.get_next_char()
             return Token(type=Symbol.chars[value], value=value, pos=position)
 
     def try_build_eof(self) -> Token:

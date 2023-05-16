@@ -155,6 +155,15 @@ def test_lexer_string_values():
     assert tokens[2].value == "a $^#2D c"
 
 
+def test_lexer_string_values_escape_char():
+    lexer = Lexer(StringSource('"\n"'))
+    tokens = lexer.get_all_tokens()
+    assert len(tokens) == 2
+    assert tokens[0].type == TokenType.STRING_VALUE
+    assert tokens[0].value == "\n"
+    assert len(tokens[0].value) == 1
+
+
 def test_lexer_string_values_with_escape_chars():
     lexer = Lexer(StringSource(' "a\t" "a\n" "a\\\\" "a \r"  "\'a\'" '))
     tokens = lexer.get_all_tokens()
@@ -163,7 +172,7 @@ def test_lexer_string_values_with_escape_chars():
         assert token.type == TokenType.STRING_VALUE
     assert tokens[0].value == "a\t"
     assert tokens[1].value == "a\n"
-    assert tokens[2].value == "a\\\\"
+    assert tokens[2].value == "a\\"
     assert tokens[3].value == "a \r"
     assert tokens[4].value == "'a'"
 
@@ -251,6 +260,15 @@ def test_lexer_comment_overflow_text():
     escaped_text = re.escape(text)
     with pytest.raises(ExceedsMaxLengthError, match=escaped_text):
         lexer.get_next_token()
+
+
+def test_lexer_negation_token():
+    lexer = Lexer(StringSource("!a"))
+    tokens = lexer.get_all_tokens()
+    assert len(tokens) == 3
+    assert tokens[0].type == TokenType.NOT
+    assert tokens[1].type == TokenType.IDENTIFIER
+    assert tokens[2].type == TokenType.EOF
 
 
 def test_lexer_invalid_token():
