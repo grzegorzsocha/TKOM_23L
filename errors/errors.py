@@ -36,3 +36,22 @@ class ExceedsMaxLengthError(Exception):
 
     def __str__(self):
         return self.message
+
+
+class InvalidSyntaxError(Exception):
+    """Exception raised when parser meets invalid syntax
+
+    Attributes:
+        column -- column where error occured
+        line -- line where error occured
+        message -- type of value
+    """
+
+    def __init__(self, column, line, message=""):
+        text = f'Error occured in line {line}, column {column}:'
+        text += '\nInvalid syntax: ' + message
+        self.message = text
+        super().__init__(self.message)
+
+    def __str__(self):
+        return self.message

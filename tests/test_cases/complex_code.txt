@@ -1,0 +1,28 @@
+bool foo(float a)
+{
+    return true;
+}
+
+
+int main()
+{
+    List temp = List();
+    int a = 0;
+    while(a < 5 or a != 24)
+    {
+        int c = 4;
+        if(c * (4 - 2) or c - 1 and c != 22)
+        {
+            print(a);
+        }
+        else
+        {
+            print("to nie jest a");
+        }
+    }
+    if(foo(3,14))
+    {
+        temp.add(13);
+    }
+    return 0;
+}
