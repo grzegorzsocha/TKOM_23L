@@ -13,10 +13,6 @@ class Node(ABC):
     def __repr__(self) -> str:
         pass
 
-    @abstractmethod
-    def __eq__(self, other) -> bool:
-        pass
-
 
 class Identifier(Node):
     def __init__(self, name: str) -> None:
@@ -28,22 +24,16 @@ class Identifier(Node):
     def __repr__(self) -> str:
         return f"IdentifierName = {self.name}"
 
-    def __eq__(self, other) -> bool:
-        return isinstance(other, Identifier) and self.name == other.name
-
 
 class BoolValue(Node):
     def __init__(self, value: bool) -> None:
         self.value = value
 
     def accept(self, visitor) -> None:
-        return visitor.visit_value(self)
+        return visitor.visit_bool_value(self)
 
     def __repr__(self) -> str:
         return f"BoolValue = {self.value}"
-
-    def __eq__(self, other) -> bool:
-        return isinstance(other, BoolValue) and self.value == other.value
 
 
 class IntValue(Node):
@@ -56,9 +46,6 @@ class IntValue(Node):
     def __repr__(self) -> str:
         return f"IntValue = {self.value}"
 
-    def __eq__(self, other) -> bool:
-        return isinstance(other, IntValue) and self.value == other.value
-
 
 class FloatValue(Node):
     def __init__(self, value: float) -> None:
@@ -69,9 +56,6 @@ class FloatValue(Node):
 
     def __repr__(self) -> str:
         return f"FloatValue = {self.value}"
-
-    def __eq__(self, other) -> bool:
-        return isinstance(other, FloatValue) and self.value == other.value
 
 
 class StringValue(Node):
@@ -84,9 +68,6 @@ class StringValue(Node):
     def __repr__(self) -> str:
         return f"StringValue = \"{self.value}\""
 
-    def __eq__(self, other) -> bool:
-        return isinstance(other, StringValue) and self.value == other.value
-
 
 class FunctionType(Node):
     def __init__(self, type: str) -> None:
@@ -98,9 +79,6 @@ class FunctionType(Node):
     def __repr__(self) -> str:
         return f"FunctionType = {self.type}"
 
-    def __eq__(self, other) -> bool:
-        return isinstance(other, FunctionType) and self.type == other.type
-
 
 class VariableType(Node):
     def __init__(self, type: str) -> None:
@@ -111,9 +89,6 @@ class VariableType(Node):
 
     def __repr__(self) -> str:
         return f"VariableType = {self.type}"
-
-    def __eq__(self, other) -> bool:
-        return isinstance(other, VariableType) and self.type == other.type
 
 
 class Parameter(Node):
@@ -131,11 +106,24 @@ class Parameter(Node):
         tree_depth -= 3
         return r
 
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, Parameter) and self.identifier == other.identifier and
-            self.type == other.type
-        )
+
+class AssignmentExpression(Node):
+    def __init__(self, identifier: Identifier, expression) -> None:
+        self.identifier = identifier
+        self.expression = expression
+
+    def accept(self, visitor) -> None:
+        return visitor.visit_assignment_expression(self)
+
+    def __repr__(self) -> str:
+        global tree_depth
+        tree_depth += 3
+        r = f"\n{' ' * tree_depth} AssignmentExpression:"
+        tree_depth += 3
+        r += f"\n{' ' * tree_depth} Identifier: {self.identifier}"
+        r += f"\n{' ' * tree_depth} Expression: {self.expression}"
+        tree_depth -= 6
+        return r
 
 
 class OrExpression(Node):
@@ -156,9 +144,6 @@ class OrExpression(Node):
         tree_depth -= 6
         return r
 
-    def __eq__(self, other) -> bool:
-        return isinstance(other, OrExpression) and self.left == other.left and self.right == other.right
-
 
 class AndExpression(Node):
     def __init__(self, left, right) -> None:
@@ -177,9 +162,6 @@ class AndExpression(Node):
         r += f"\n{' ' * tree_depth} RightOperand: {self.right}"
         tree_depth -= 6
         return r
-
-    def __eq__(self, other) -> bool:
-        return isinstance(other, AndExpression) and self.left == other.left and self.right == other.right
 
 
 class ComparisonExpression(Node):
@@ -202,38 +184,26 @@ class ComparisonExpression(Node):
         tree_depth -= 6
         return r
 
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, ComparisonExpression) and self.left == other.left and
-            self.operator == other.operator and self.right == other.right
-        )
 
-
-class ArithmeticExpression(Node):
+class AdditiveExpression(Node):
     def __init__(self, left, operator: str, right) -> None:
         self.left = left
         self.operator = operator
         self.right = right
 
     def accept(self, visitor) -> None:
-        return visitor.visit_arithmetic_expression(self)
+        return visitor.visit_additive_expression(self)
 
     def __repr__(self) -> str:
         global tree_depth
         tree_depth += 3
-        r = f"\n{' ' * tree_depth} ArithmeticExpression:"
+        r = f"\n{' ' * tree_depth} AdditiveExpression:"
         tree_depth += 3
         r += f"\n{' ' * tree_depth} LeftOperand: {self.left}"
         r += f"\n{' ' * tree_depth} Operator: {self.operator}"
         r += f"\n{' ' * tree_depth} RightOperand: {self.right}"
         tree_depth -= 6
         return r
-
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, ArithmeticExpression) and self.left == other.left and
-            self.operator == other.operator and self.right == other.right
-        )
 
 
 class MultiplicativeExpression(Node):
@@ -256,15 +226,10 @@ class MultiplicativeExpression(Node):
         tree_depth -= 6
         return r
 
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, MultiplicativeExpression) and self.left == other.left and
-            self.operator == other.operator and self.right == other.right
-        )
-
 
 class NegationExpression(Node):
-    def __init__(self, expression) -> None:
+    def __init__(self, operator, expression) -> None:
+        self.operator = operator
         self.expression = expression
 
     def accept(self, visitor) -> None:
@@ -275,19 +240,37 @@ class NegationExpression(Node):
         tree_depth += 3
         r = f"\n{' ' * tree_depth} NegationExpression:"
         tree_depth += 3
-        r += f"\n{' ' * tree_depth} Operand: {self.left}"
+        r += f"\n{' ' * tree_depth} Operand: {self.operator}"
         tree_depth -= 6
         return r
 
-    def __eq__(self, other) -> bool:
-        return isinstance(other, NegationExpression) and self.expression == other.expression
+
+class MethodCall(Node):
+    def __init__(self, name: Identifier, arguments: list) -> None:
+        self.name = name
+        self.arguments = arguments
+
+    def accept(self, visitor, caller) -> None:
+        return visitor.visit_method_call(self, caller)
+
+    def __repr__(self) -> str:
+        global tree_depth
+        tree_depth += 3
+        r = f"\n{' ' * tree_depth} MethodCall:"
+        tree_depth += 3
+        r += f"\n{' ' * tree_depth} MethodName: {self.name}"
+        r += f"\n{' ' * tree_depth} Arguments:"
+        tree_depth += 3
+        for argument in self.arguments:
+            r += f"\n{' ' * tree_depth} Argument: {argument}"
+        tree_depth -= 9
+        return r
 
 
 class MethodCallExpression(Node):
-    def __init__(self, object: Identifier, method: Identifier, arguments: list) -> None:
-        self.object = object
-        self.method = method
-        self.arguments = arguments
+    def __init__(self, caller: Identifier, methods: list[MethodCall]) -> None:
+        self.caller = caller
+        self.methods = methods
 
     def accept(self, visitor) -> None:
         return visitor.visit_method_call_expression(self)
@@ -297,42 +280,10 @@ class MethodCallExpression(Node):
         tree_depth += 3
         r = f"\n{' ' * tree_depth} MethodCallExpression:"
         tree_depth += 3
-        r += f"\n{' ' * tree_depth} Caller: {self.object}"
-        r += f"\n{' ' * tree_depth} Method: {self.method}"
-        r += f"\n{' ' * tree_depth} Arguments: {self.arguments}"
+        r += f"\n{' ' * tree_depth} Caller: {self.caller}"
+        r += f"\n{' ' * tree_depth} Methods: {self.methods}"
         tree_depth -= 6
         return r
-
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, MethodCallExpression) and self.object == other.object and
-            self.method == other.method and self.arguments == other.arguments
-        )
-
-
-class FunctionCallExpression(Node):
-    def __init__(self, function_name: Identifier, arguments: list) -> None:
-        self.function_name = function_name
-        self.arguments = arguments
-
-    def accept(self, visitor) -> None:
-        return visitor.visit_function_call_expression(self)
-
-    def __repr__(self) -> str:
-        global tree_depth
-        tree_depth += 3
-        r = f"\n{' ' * tree_depth} FunctionCallExpression:"
-        tree_depth += 3
-        r += f"\n{' ' * tree_depth} FunctionName: {self.function_name}"
-        r += f"\n{' ' * tree_depth} Arguments: {self.arguments}"
-        tree_depth -= 6
-        return r
-
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, FunctionCallExpression) and self.function_name == other.function_name and
-            self.arguments == other.arguments
-        )
 
 
 class FunctionCallStatement(Node):
@@ -356,12 +307,6 @@ class FunctionCallStatement(Node):
         tree_depth -= 9
         return r
 
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, FunctionCallStatement) and self.identifier == other.identifier and
-            self.arguments == other.arguments
-        )
-
 
 class Block(Node):
     def __init__(self, statements: list) -> None:
@@ -381,9 +326,6 @@ class Block(Node):
             r += f"\n{' ' * tree_depth} Statement: {statement}"
         tree_depth -= 9
         return r
-
-    def __eq__(self, other) -> bool:
-        return isinstance(other, Block) and self.statements == other.statements
 
 
 class IfStatement(Node):
@@ -411,12 +353,6 @@ class IfStatement(Node):
         tree_depth -= 6
         return r
 
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, IfStatement) and self.condition == other.condition
-            and self.block == other.block and self.else_block == other.else_block
-        )
-
 
 class WhileStatement(Node):
     def __init__(self, condition, block: Block) -> None:
@@ -436,12 +372,6 @@ class WhileStatement(Node):
         r += f"{' ' * tree_depth} {self.block}"
         tree_depth -= 6
         return r
-
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, WhileStatement) and self.condition == other.condition
-            and self.block == other.block
-        )
 
 
 class DeclarationStatement(Node):
@@ -464,12 +394,6 @@ class DeclarationStatement(Node):
         tree_depth -= 6
         return r
 
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, DeclarationStatement) and self.variable_type == other.variable_type
-            and self.identifier == other.identifier and self.expression == other.expression
-        )
-
 
 class ReturnStatement(Node):
     def __init__(self, expression) -> None:
@@ -487,9 +411,6 @@ class ReturnStatement(Node):
         tree_depth -= 6
         return r
 
-    def __eq__(self, other) -> bool:
-        return isinstance(other, ReturnStatement) and self.expression == other.expression
-
 
 class Function(Node):
     def __init__(self, function_type: FunctionType, identifier: Identifier,
@@ -500,7 +421,7 @@ class Function(Node):
         self.block = block
 
     def accept(self, visitor) -> None:
-        return visitor.visit_function_declaration(self)
+        return visitor.visit_function(self)
 
     def __repr__(self) -> str:
         global tree_depth
@@ -518,13 +439,6 @@ class Function(Node):
         tree_depth -= 3
         return r
 
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, Function) and self.function_type == other.function_type and
-            self.identifier == other.identifier and self.parameters == other.parameters and
-            self.block == other.block
-        )
-
 
 class Program(Node):
     def __init__(self, functions: list) -> None:
@@ -535,6 +449,3 @@ class Program(Node):
 
     def __repr__(self) -> str:
         return f"Program:{self.functions}"
-
-    def __eq__(self, other) -> bool:
-        pass

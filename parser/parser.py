@@ -118,11 +118,15 @@ class Parser:
         elif self.get_current_token_type() == TokenType.IDENTIFIER:
             identifier = self.parse_identifier()
             if self.get_current_token_type() == TokenType.DOT:
-                self.require_token_and_consume(TokenType.DOT)
-                method_call = self.parse_method_call_expression(identifier)
+                method_call = self.parse_method_call_statement(identifier)
                 self.require_token_and_consume(TokenType.SEMI)
                 return method_call
-            else:
+            elif self.get_current_token_type() == TokenType.ASSIGN:
+                self.require_token_and_consume(TokenType.ASSIGN)
+                expression = self.parse_expression()
+                self.require_token_and_consume(TokenType.SEMI)
+                return nodes.AssignmentExpression(identifier, expression)
+            elif self.get_current_token_type() == TokenType.LPAREN:
                 return self.parse_function_call_statement(identifier)
         else:
             return self.parse_expression()
@@ -167,16 +171,29 @@ class Parser:
         self.require_token_and_consume(TokenType.SEMI)
         return nodes.DeclarationStatement(type, identifier)
 
+    def parse_method_call_statement(self, caller: nodes.Identifier):
+        method_calls = []
+        while self.get_current_token_type() == TokenType.DOT:
+            self.require_token_and_consume(TokenType.DOT)
+            identifier = self.parse_identifier()
+            self.require_token_and_consume(TokenType.LPAREN)
+            arguments = []
+            if self.get_current_token_type() != TokenType.RPAREN:
+                arguments = self.parse_call_arguments()
+            self.require_token_and_consume(TokenType.RPAREN)
+            method_calls.append(nodes.MethodCall(identifier, arguments))
+        return nodes.MethodCallExpression(caller, method_calls)
+
     def parse_function_call_statement(self, identifier: nodes.Identifier):
         self.require_token_and_consume(TokenType.LPAREN)
         arguments = []
         if self.get_current_token_type() != TokenType.RPAREN:
-            arguments = self.parse_function_call_arguments()
+            arguments = self.parse_call_arguments()
         self.require_token_and_consume(TokenType.RPAREN)
         self.require_token_and_consume(TokenType.SEMI)
         return nodes.FunctionCallStatement(identifier, arguments)
 
-    def parse_function_call_arguments(self) -> list:
+    def parse_call_arguments(self) -> list:
         arguments = []
         arguments.append(self.parse_expression())
         while self.get_current_token_type() == TokenType.COMMA:
@@ -204,21 +221,21 @@ class Parser:
         return left
 
     def parse_comparison_expression(self):
-        left = self.parse_arithmetic_expression()
+        left = self.parse_additive_expression()
         while self.get_current_token_type() in self.COMPARISON_TOKENS:
             operator = self.get_current_token_value()
             self.consume()
-            right = self.parse_arithmetic_expression()
+            right = self.parse_additive_expression()
             left = nodes.ComparisonExpression(left, operator, right)
         return left
 
-    def parse_arithmetic_expression(self):
+    def parse_additive_expression(self):
         left = self.parse_multiplicative_expression()
         while self.get_current_token_type() in [TokenType.PLUS, TokenType.MINUS]:
             operator = self.get_current_token_value()
             self.consume()
             right = self.parse_multiplicative_expression()
-            left = nodes.ArithmeticExpression(left, operator, right)
+            left = nodes.AdditiveExpression(left, operator, right)
         return left
 
     def parse_multiplicative_expression(self):
@@ -234,11 +251,29 @@ class Parser:
         negated = False
         if (self.get_current_token_type() == TokenType.NOT or
                 self.get_current_token_type() == TokenType.MINUS):
+            operator = self.get_current_token_value()
             self.consume()
             negated = True
-        expression = self.parse_factor()
+        expression = self.parse_method_call_expression()
         if negated:
-            return nodes.NegationExpression(expression)
+            return nodes.NegationExpression(operator, expression)
+        else:
+            return expression
+
+    def parse_method_call_expression(self):
+        expression = self.parse_factor()
+        method_calls = []
+        while self.get_current_token_type() == TokenType.DOT:
+            self.consume()
+            identifier = self.parse_identifier()
+            self.require_token_and_consume(TokenType.LPAREN)
+            arguments = []
+            if self.get_current_token_type() != TokenType.RPAREN:
+                arguments = self.parse_call_arguments()
+            self.require_token_and_consume(TokenType.RPAREN)
+            method_calls.append(nodes.MethodCall(identifier, arguments))
+        if method_calls:
+            return nodes.MethodCallExpression(expression, method_calls)
         else:
             return expression
 
@@ -253,12 +288,9 @@ class Parser:
             return expression
         elif self.get_current_token_type() == TokenType.IDENTIFIER:
             identifier = self.parse_identifier()
-            if self.get_current_token_type() == TokenType.DOT:
-                self.consume()
-                return self.parse_method_call_expression(identifier)
             if self.get_current_token_type() == TokenType.LPAREN:
                 self.consume()
-                return self.parse_function_call_expression(identifier)
+                return self.parse_function_call_in_expression(identifier)
             return identifier
         elif self.get_current_token_type() in self.COMPLEX_VARIABLE_TOKENS:
             self.require_tokens(self.COMPLEX_VARIABLE_TOKENS)
@@ -266,26 +298,17 @@ class Parser:
             self.consume()
             if self.get_current_token_type() == TokenType.LPAREN:
                 self.consume()
-                return self.parse_function_call_expression(identifier)
+                return self.parse_function_call_in_expression(identifier)
         else:
             raise InvalidSyntaxError(self.current_token.pos[0], self.current_token.pos[1],
                                      "Unrecognized expression")
 
-    def parse_method_call_expression(self, object: nodes.Identifier):
-        identifier = self.parse_identifier()
-        self.require_token_and_consume(TokenType.LPAREN)
+    def parse_function_call_in_expression(self, identifier: nodes.Identifier):
         arguments = []
         if self.get_current_token_type() != TokenType.RPAREN:
-            arguments = self.parse_function_call_arguments()
+            arguments = self.parse_call_arguments()
         self.require_token_and_consume(TokenType.RPAREN)
-        return nodes.MethodCallExpression(object, identifier, arguments)
-
-    def parse_function_call_expression(self, identifier: nodes.Identifier):
-        arguments = []
-        if self.get_current_token_type() != TokenType.RPAREN:
-            arguments = self.parse_function_call_arguments()
-        self.require_token_and_consume(TokenType.RPAREN)
-        return nodes.FunctionCallExpression(identifier, arguments)
+        return nodes.FunctionCallStatement(identifier, arguments)
 
     def parse_literal(self):
         if self.get_current_token_type() == TokenType.INT_VALUE:
@@ -302,7 +325,7 @@ class Parser:
             return nodes.StringValue(value)
         elif self.get_current_token_type() in [TokenType.TRUE, TokenType.FALSE]:
             value = self.get_current_token_value()
-            if value == "true":
+            if value == "True":
                 value = True
             else:
                 value = False

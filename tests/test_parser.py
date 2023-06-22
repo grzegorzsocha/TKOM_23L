@@ -54,7 +54,7 @@ def test_parser_return_statement():
 
 
 def test_parser_if_statement():
-    source = StringSource('int main() { if (true) { return 7; } }')
+    source = StringSource('int main() { if (True) { return 7; } }')
     lexer = Lexer(source)
     parser = Parser(lexer)
     program = parser.parse_program()
@@ -66,7 +66,7 @@ def test_parser_if_statement():
 
 
 def test_parser_if_else_statement():
-    source = StringSource('int main() { if (true) { return 7; } else { return 8; } }')
+    source = StringSource('int main() { if (True) { return 7; } else { return 8; } }')
     lexer = Lexer(source)
     parser = Parser(lexer)
     program = parser.parse_program()
@@ -79,7 +79,7 @@ def test_parser_if_else_statement():
 
 
 def test_parser_while_statement():
-    source = StringSource('int main() { while (true) { return 7; } }')
+    source = StringSource('int main() { while (True) { return 7; } }')
     lexer = Lexer(source)
     parser = Parser(lexer)
     program = parser.parse_program()
@@ -146,7 +146,7 @@ def test_parser_function_call_with_expression_arguments():
     assert isinstance(program.functions[0].block.statements[0], nodes.FunctionCallStatement)
     assert program.functions[0].block.statements[0].identifier.name == 'add'
     assert len(program.functions[0].block.statements[0].arguments) == 2
-    assert isinstance(program.functions[0].block.statements[0].arguments[0], nodes.ArithmeticExpression)
+    assert isinstance(program.functions[0].block.statements[0].arguments[0], nodes.AdditiveExpression)
     assert program.functions[0].block.statements[0].arguments[0].left.value == 7
     assert program.functions[0].block.statements[0].arguments[0].right.value == 5
     assert program.functions[0].block.statements[0].arguments[1].value == 5
@@ -163,7 +163,7 @@ def test_parser_or_expression():
 
 
 def test_parser_and_expression():
-    source = StringSource('int main() { if (a > c and true) { return 7; } }')
+    source = StringSource('int main() { if (a > c and True) { return 7; } }')
     lexer = Lexer(source)
     parser = Parser(lexer)
     program = parser.parse_program()
@@ -188,7 +188,7 @@ def test_parser_arithmetic_expression():
     lexer = Lexer(source)
     parser = Parser(lexer)
     program = parser.parse_program()
-    assert isinstance(program.functions[0].block.statements[0].condition, nodes.ArithmeticExpression)
+    assert isinstance(program.functions[0].block.statements[0].condition, nodes.AdditiveExpression)
     assert program.functions[0].block.statements[0].condition.left.name == 'a'
     assert program.functions[0].block.statements[0].condition.right.name == 'c'
     assert program.functions[0].block.statements[0].condition.operator == "+"
@@ -199,7 +199,7 @@ def test_parser_arithmetic_paretheis():
     lexer = Lexer(source)
     parser = Parser(lexer)
     program = parser.parse_program()
-    assert isinstance(program.functions[0].block.statements[0].condition, nodes.ArithmeticExpression)
+    assert isinstance(program.functions[0].block.statements[0].condition, nodes.AdditiveExpression)
     assert isinstance(program.functions[0].block.statements[0].condition.left, nodes.Identifier)
     assert isinstance(program.functions[0].block.statements[0].condition.right, nodes.Identifier)
     assert program.functions[0].block.statements[0].condition.operator == "+"
@@ -210,8 +210,8 @@ def test_parser_arithmetic_expression_with_precedence():
     lexer = Lexer(source)
     parser = Parser(lexer)
     program = parser.parse_program()
-    assert isinstance(program.functions[0].block.statements[0].condition, nodes.ArithmeticExpression)
-    assert isinstance(program.functions[0].block.statements[0].condition.left, nodes.ArithmeticExpression)
+    assert isinstance(program.functions[0].block.statements[0].condition, nodes.AdditiveExpression)
+    assert isinstance(program.functions[0].block.statements[0].condition.left, nodes.AdditiveExpression)
     assert isinstance(program.functions[0].block.statements[0].condition.right, nodes.IntValue)
     assert program.functions[0].block.statements[0].condition.left.operator == "+"
 
@@ -221,8 +221,8 @@ def test_parser_arithmetic_expression_with_precedence_and_parenthersis():
     lexer = Lexer(source)
     parser = Parser(lexer)
     program = parser.parse_program()
-    assert isinstance(program.functions[0].block.statements[0].condition, nodes.ArithmeticExpression)
-    assert isinstance(program.functions[0].block.statements[0].condition.left, nodes.ArithmeticExpression)
+    assert isinstance(program.functions[0].block.statements[0].condition, nodes.AdditiveExpression)
+    assert isinstance(program.functions[0].block.statements[0].condition.left, nodes.AdditiveExpression)
     assert isinstance(program.functions[0].block.statements[0].condition.right, nodes.IntValue)
     assert program.functions[0].block.statements[0].condition.left.operator == "+"
 
@@ -232,9 +232,9 @@ def test_parser_arithmetic_expression_with_precedence_with_parenthesis_not_in_or
     lexer = Lexer(source)
     parser = Parser(lexer)
     program = parser.parse_program()
-    assert isinstance(program.functions[0].block.statements[0].condition, nodes.ArithmeticExpression)
+    assert isinstance(program.functions[0].block.statements[0].condition, nodes.AdditiveExpression)
     assert isinstance(program.functions[0].block.statements[0].condition.left, nodes.Identifier)
-    assert isinstance(program.functions[0].block.statements[0].condition.right, nodes.ArithmeticExpression)
+    assert isinstance(program.functions[0].block.statements[0].condition.right, nodes.AdditiveExpression)
     assert program.functions[0].block.statements[0].condition.right.operator == "+"
 
 
@@ -243,7 +243,7 @@ def test_parser_arithmetic_expression_with_precedence_with_multiplication():
     lexer = Lexer(source)
     parser = Parser(lexer)
     program = parser.parse_program()
-    assert isinstance(program.functions[0].block.statements[0].condition, nodes.ArithmeticExpression)
+    assert isinstance(program.functions[0].block.statements[0].condition, nodes.AdditiveExpression)
     assert isinstance(program.functions[0].block.statements[0].condition.left, nodes.Identifier)
     assert isinstance(program.functions[0].block.statements[0].condition.right, nodes.MultiplicativeExpression)
     assert program.functions[0].block.statements[0].condition.operator == "+"
@@ -294,9 +294,23 @@ def test_parser_method_call_expression():
     parser = Parser(lexer)
     program = parser.parse_program()
     assert isinstance(program.functions[0].block.statements[0].expression, nodes.MethodCallExpression)
-    assert program.functions[0].block.statements[0].expression.object.name == 'a'
-    assert program.functions[0].block.statements[0].expression.method.name == 'length'
-    assert len(program.functions[0].block.statements[0].expression.arguments) == 0
+    assert program.functions[0].block.statements[0].expression.caller.name == 'a'
+    assert isinstance(program.functions[0].block.statements[0].expression.methods[0], nodes.MethodCall)
+    assert program.functions[0].block.statements[0].expression.methods[0].name.name == 'length'
+
+
+def test_parser_method_call_in_method_call():
+    source = StringSource('int main() { return a.length().get(); }')
+    lexer = Lexer(source)
+    parser = Parser(lexer)
+    program = parser.parse_program()
+    assert isinstance(program.functions[0].block.statements[0].expression, nodes.MethodCallExpression)
+    assert program.functions[0].block.statements[0].expression.caller.name == 'a'
+    assert isinstance(program.functions[0].block.statements[0].expression.methods[0], nodes.MethodCall)
+    assert program.functions[0].block.statements[0].expression.methods[0].name.name == 'length'
+    assert isinstance(program.functions[0].block.statements[0].expression.methods[1], nodes.MethodCall)
+    assert program.functions[0].block.statements[0].expression.methods[1].name.name == 'get'
+    assert len(program.functions[0].block.statements[0].expression.methods[1].arguments) == 0
 
 
 def test_parser_skip_comment():
@@ -306,6 +320,18 @@ def test_parser_skip_comment():
     program = parser.parse_program()
     assert len(program.functions[0].block.statements) == 1
     assert isinstance(program.functions[0].block.statements[0], nodes.ReturnStatement)
+
+
+def test_parser_void_function():
+    source = StringSource('void foo() { print("foo"); }')
+    lexer = Lexer(source)
+    parser = Parser(lexer)
+    program = parser.parse_program()
+    assert len(program.functions) == 1
+    assert program.functions[0].identifier.name == 'foo'
+    assert program.functions[0].function_type.type == 'void'
+    assert len(program.functions[0].parameters) == 0
+    assert len(program.functions[0].block.statements) == 1
 
 
 def test_parser_simple_code():
