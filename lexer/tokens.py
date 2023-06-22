@@ -76,8 +76,8 @@ class Symbol:
         'else': TokenType.ELSE,
         'or': TokenType.OR,
         'and': TokenType.AND,
-        'true': TokenType.TRUE,
-        'false': TokenType.FALSE,
+        'True': TokenType.TRUE,
+        'False': TokenType.FALSE,
         'void': TokenType.VOID,
         'return': TokenType.RETURN
     }

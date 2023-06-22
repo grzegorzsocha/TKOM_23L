@@ -200,7 +200,7 @@ def test_lexer_double_chars():
 
 
 def test_lexer_keywords():
-    lexer = Lexer(StringSource("int float List Point Line Collection true and void return"))
+    lexer = Lexer(StringSource("int float List Point Line Collection True and void return"))
     tokens = lexer.get_all_tokens()
     assert len(tokens) == 11
     assert tokens[0].type == TokenType.INT

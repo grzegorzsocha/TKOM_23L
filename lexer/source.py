@@ -11,7 +11,8 @@ class Source:
         self.current_char = self.get_next_char()
 
     def __del__(self) -> None:
-        self.stream.close()
+        if hasattr(self, 'stream') and self.stream:
+            self.stream.close()
 
     def get_current_char(self) -> str:
         return self.current_char
