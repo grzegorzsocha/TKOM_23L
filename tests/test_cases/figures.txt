@@ -1,0 +1,46 @@
+
+int main()
+{
+    Point a = Point(0, 0, 0);
+    Point b = Point(1, 0, 0);
+    Point c = Point(0, 1, 0);
+    Point d = Point(0.5, 0.5, 3);
+    Line ab = Line(a, b);
+    Line ac = Line(a, c);
+    Line ad = Line(a, d);
+    Line bc = Line(b, c);
+    Line bd = Line(b, d);
+    Line cd = Line(c, d);
+    Polyhedron p = Polyhedron(ab, ac, ad, bc, bd, cd);
+
+    Point x = Point(2, 2, 4);
+    Point y = Point(3, 2, 4);
+    Point z = Point(2, 3, 4);
+    Point w = Point(3, 3, 4);
+    Point u = Point(2, 2, 6);
+    Point v = Point(3, 2, 6);
+    Point i = Point(2, 3, 6);
+    Point j = Point(3, 3, 6);
+    Line xy = Line(x, y);
+    Line xz = Line(x, z);
+    Line wy = Line(w, y);
+    Line wz = Line(w, z);
+    Line xu = Line(x, u);
+    Line yv = Line(y, v);
+    Line zi = Line(z, i);
+    Line wj = Line(w, j);
+    Line uv = Line(u, v);
+    Line ui = Line(u, i);
+    Line jv = Line(j, v);
+    Line ji = Line(j, i);
+    Polyhedron s = Polyhedron(xy, xz, wy, wz, xu, yv, zi, wj, uv, ui, jv, ji);
+
+    Collection scene = Collection(s);
+    scene.add(p);
+    scene.display();
+
+    scene.empty();
+    scene.display();
+
+    return 0;
+}

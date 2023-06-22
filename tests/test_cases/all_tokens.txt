@@ -1,4 +1,4 @@
-int float bool string List Point Line Polyhedron Collection while if else or and true false void return
+int float bool string List Point Line Polyhedron Collection while if else or and True False void return
 + - * / = > < ( ) { } . , ; ! # some comment
 == != <= >=
 some_identifier_2 351 24.77
