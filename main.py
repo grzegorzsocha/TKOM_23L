@@ -1,10 +1,22 @@
-from lexer.lexer import Lexer
-from lexer.source import FileSource
-from parser.parser import Parser
+from interpreter.interpreter import Interpreter
+from argparse import ArgumentParser
+import sys
+
+
+def main(args):
+    parser = ArgumentParser(prog='Interpreter', description='Interpreter for my fantastic language')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-f', '--file', type=str, help='Run interpreter using file')
+    group.add_argument('-s', '--string', type=str, help='Run interpreter using string')
+    arguments = parser.parse_args(args)
+
+    if arguments.file:
+        interpreter = Interpreter(True, arguments.file)
+    else:
+        interpreter = Interpreter(False, arguments.string)
+
+    interpreter.run()
 
 
 if __name__ == '__main__':
-    lexer = Lexer(FileSource('tests/test_cases/complex_code.txt'))
-    parser = Parser(lexer)
-    program = parser.parse_program()
-    print(program)
+    main(sys.argv[1:])
