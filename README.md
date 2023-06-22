@@ -1,4 +1,4 @@
-# TKOM_23L - dokmentacja wstępna
+# TKOM_23L - dokmentacja 
 
 Imię i nazwisko     - Grzegorz Socha
 
@@ -35,7 +35,7 @@ Język umożliwiający opis punktów i odcinków w przestrzeni trójwymiarowej. 
   - length() - zwraca ilość elementów w liście,
   - get(index) - zwraca element znajdujący się na pozycji index,
   - add(element) - dodaje element na koniec listy,
-  - remove(index) - usuwa element znajdujący się na pozycji index,
+  - remove(index) - usuwa element znajdujący się na pozycji index, lub ostatni element jeśli index nie został podany,
 - `Point` - Typ pozwalający na definiowanie punktu, posiada pola x(float), y(float), z(float) okreslające jego położenie, zawiera następujące metody:
   - set_x(x) - ustawia nową wartość x,
   - set_y(y) - ustawia nową wartość y,
@@ -134,7 +134,7 @@ while(a != b)
 
 
 ## Definiowanie funkcji
-Każdy wczytany program musi zawierać funkcję `int main()`, która będzie wykonywana jako pierwsza.
+Każdy wczytany program musi zawierać funkcję `int main()`, która będzie wykonywana.
 Funkcje muszą być określone przed funkcją `main` oraz muszą mieć określony typ zwracanej wartości. Funkcje które nie będą zwracać żadnej wartości powinny być typu `void`.
 
 Definiowanie funkcji będzie wyglądało następująco:
@@ -157,7 +157,7 @@ int add(a, b)
 # przykładowa funkcja
 bool is_vertex(Point a, Polyhedron p)
 {
-    bool vertex = false;
+    bool vertex = False;
     int n = p.points().length();
     int i = 0;
 
@@ -165,7 +165,7 @@ bool is_vertex(Point a, Polyhedron p)
     {
         if(p.points().get(i).x == a.x and p.points().get(i).y == a.y and p.points().get(i).z == a.z)
         {
-            vertex = true;
+            vertex = True;
         }
         i = i + 1;
     }
@@ -216,15 +216,17 @@ program                     = {function_declaration} ;
 
 block                       = "{", {statement}, "}" ;
 
-statement                   = assigment | if_statement | while_statement | function_call, ";" | return, ";" ;
+statement                   = assigment | if_statement | while_statement | function_call, ";" | method_call, ";" | return, ";" ;
 
-assignment                  = type, identifier, "=", expression, ";" ;
+assignment                  = type, identifier, "=", expression, ";"  | identifier, "=", expression, ";"
 
 if_statement                = "if", "(", expression, ")", block, ["else", block] ;
 
 while_statement             = "while", "(", expression, ")", block ;
 
 function_call               = identifier, "(", [call_parameters_list], ")" ;
+
+method_call                 = identifier, access_operator, identifier, "(", [call_parameters_list], ")" ;
 
 call_parameters_list        = expression, {",", expression} ;
 
@@ -246,9 +248,9 @@ arithmetic_expression       = multiplicative_expression, {arithmetic_operator, m
 
 multiplicative_expression   = negation_expression, {multiplicative_operator, negation_expression} ;
 
-negation_expression         = [negation_operator], object_access_expression ;
+negation_expression         = [negation_operator], method_call_expression ;
 
-object_access_expression    = factor, {access_operator, identifier} ;
+method_call_expression      = factor, {access_operator, identifier, "(", [call_parameters_list], ")"} ;
 
 factor                      = literal | identifier | function_call | "(", expression, ")" ;
 
@@ -278,7 +280,7 @@ int                         = "0" | (non_zero_digit, {digit}) ;
 
 float                       = int, ".", digit, {digit} ;
 
-bool                        = "true" | "false" ;
+bool                        = "True" | "False" ;
 
 string                      = '"', {char}, '"' ;
 
@@ -300,35 +302,75 @@ W razie wystąpienia błędu zwracany będzie odpowiedni komunikat. Jeśli będz
 Przykładowe komunikaty błędu:
 
 ```
-ComparissonError: Error occured in line 3, column 5:
-cannot compare 'int' to 'string'.
+InvalidTokenError:
+Error occured in line 3, column 4:
+Invalid character '^'
 ```
 ```
-InvalidTokenError: Error occured in line 2, column 3:
-Invalid character '$'
+InvalidNumberOfArgumentsError:
+Invalid number of arguments:'
+Function 'add_variable' called with invalid number of arguments'
 ```
 
 
 ## Analiza wymagań
-- program interpretuje kod z pliku tekstowego,
-- sprawdza poprawność leksykalną i składniową i zgłasza wykryte błędy,
+- program interpretuje kod z pliku tekstowego lub z ciągu znaków podanego w argumencie wywołania,
+- program wyświetla wynik działania programu na konsolę,
+- sprawdza poprawność leksykalną i składniową i odpowiednio zgłasza wykryte błędy,
 - zapewnia unikalność nazw zmiennych i funkcji,
 - sprawdza poprawność tworzonych zmiennych typów złożonych,
 - umożliwia na wielokrotne tworzenie oraz wyświetlanie scen zawierających bryły.
 
 
 ## Podział na moduły
-- Lekser - Moduł realizujacy analizę leksykalną. Z pobranych znaków tworzy tokeny.
-- Parser - Moduł realizujący analizę składniową. Tworzy on drzewo obiektów do gotowych do interpretacji.
-- Interpreter - Moduł realizujacy interpretację analizowanego kodu. Wykonuje on dostarczony kod i zwraca wynik.
-- Obsługa błędów - Moduł realizujacy obsługę błędów zgłoszonych przez inne moduły.
+Z racji że praca nad projektem była podzielona na 3 iteracje, projekt również został podzielony na 3 moduły:
+- Lekser - Moduł realizujacy analizę leksykalną. W jego skład wchodzi `source.py`, `lexer.py` oraz odpowiednie testy do tych modułów zawarte w `test_lexer.py`:
+  - `source.py` - Moduł realizujący wczytywanie kodu z pliku tekstowego lub z ciągu znaków podanego w argumencie wywołania,
+  - `lexer.py` - Moduł realizujący analizę leksykalną. Tworzy on listę tokenów gotowych do analizy składniowej,
+- Parser - Moduł realizujący analizę składniową. W jego skład wchodzi `tokens.py`, `parser.py` oraz odpowiednie testy do tego modułu zawarte w `test_parser.py`:
+  - `nodes.py` - Moduł zawierający klasy reprezentujące poszczególne węzły drzewa składniowego,
+  - `parser.py` - Moduł realizujący analizę składniową. Tworzy on drzewo składniowe gotowe do interpretacji,
+- Interpreter - Moduł realizujacy interpretację analizowanego kodu. W jego skład wchodzi `classes.py`, `context.py`, `visitor.py`, `interpreter.py` oraz odpowiednie testy do tych modułów zawarte w `test_interpreter.py`:
+  - `classes.py` - Moduł zawierający klasy reprezentujące poszczególne typy danych złożonych, które są wykorzystywane w trakcie interpretacji,
+  - `context.py` - Moduł zawierający klasę reprezentującą kontekst interpretacji, który przechowuje zmienne i funkcje,
+  - `visitor.py` - Moduł zawierający klasę reprezentującą wizytatora drzewa składniowego, który przekształca drzewo składniowe na drzewo interpretacji,
+  - `interpreter.py` - Moduł realizujący interpretację analizowanego kodu. Wykonuje on dostarczony kod i zwraca wynik.
+
+Dodatkowo w pliku `errors.py` zawarte są klasy reprezentujące błędy, które mogą wystąpić w trakcie analizy leksykalnej, składniowej oraz interpretacji, a w pliku `main.py` zawarta jest funkcja `main`, która jest odpowiedzialna za uruchomienie programu.
+
+
+## Uruchomienie programu
+Aby uruchomić program należy wywołać skrypt `main.py` z odpowiednimi argumentami:
+- `-f` uruchomienie interpretacji z pliku tekstowego zawierający kod,
+- `-s` uruchomienie interpretacji z podanego ciągu znaków.
+
+Przykładowe uruchomienie programu z pliku tekstowego:
+```
+python3 main.py -f ./tests/test_cases/figures.txt
+```
+
+Przykładowe uruchomienie programu z ciągu znaków:
+```
+python3 main.py -s 'int main() {print("eh"); return 0;}'
+```
+
+
+## Przykładowe wyświetlenie sceny
+![Przykładowe wyświetlenie sceny](display_example.jpg)
 
 
 ## Testowanie
 
-Każdy z poszczególnych modułów będzie posiadał testy jednostkowe zrealizowane za pomocą biblioteki `pytest`.
+Jak już wcześniej wspomniano, każdy z poszczególnych modułów posiada testy jednostkowe zrealizowane za pomocą biblioteki `pytest`. Plki z testami znajdują się w folderze `tests`. Dodatkowo w podfolderze `test_cases` znajdują się pliki tekstowe zawierające przykładowy kod, który został wykorzystany do testowania programu.
 
 
 ## Biblioteki
 
-Na obecną chwilę, do wyświetlania scen na ekranie użyta będzie biblioteka `matplotlib`.
+Do oblicznia i wyświetlania brył na ekranie zostały wykorzystane następujące biblioteki:
+- `numpy`
+- `matplotlib`
+- `scipy`
+
+Wszyskie pozostałe wykorzystane biblioteki są bibliotekami standardowymi języka Python.
+
+Wymagane dodatkowe biblioteki do uruchomienia programu wraz z odpowiednimi wersjami zostały umieszczone w pliku `requirements.txt`.
